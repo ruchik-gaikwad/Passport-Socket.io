@@ -1,0 +1,23 @@
+{
+  "name": "pass",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js",
+    "debug": "node-inspect app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.0",
+    "express": "^4.15.4",
+    "express-session": "^1.15.5",
+    "morgan": "^1.8.2",
+    "passport": "^0.4.0",
+    "passport-local": "^1.0.0",
+    "passport.socketio": "^3.7.0",
+    "sessionstore": "^1.2.18",
+    "socket.io": "^2.0.3"
+  }
+}
