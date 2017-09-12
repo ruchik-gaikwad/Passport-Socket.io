@@ -1,14 +1,20 @@
+const path = require('path');
 const express = require('express');
 const session = require('express-session');
+const sessionStore = require('sessionstore').createSessionStore();
 const bodyParser  = require('body-parser');
 const app = express();
+const cookieParser = require('cookie-parser');
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy;
 const morgan = require('morgan');
+const http = require('http').Server(app);
 
+const io = require('socket.io')(http);
+const passportSocketIo = require('passport.socketio');
 
 app.use(morgan('dev'));
-app.use(session({secret: 'keyboard cat', resave: true, saveUninitialized: true}))
+app.use(session({secret: 'keyboard cat', resave: true, saveUninitialized: true, store: sessionStore}))
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
 app.use(passport.initialize());
@@ -32,6 +38,25 @@ passport.use(new LocalStrategy(
       return done(null, authenticate);
     }
   }));
+
+
+  io.use(passportSocketIo.authorize({
+    cookieParser : cookieParser,
+    key : 'express.sid',
+    secret: 'keyboard cat',
+    store: sessionStore,
+    fail: function(data, message, error, accept) {
+            console.log('failed connection to socket.io')
+            accept(null, false);
+          },
+  success: function(data, accept) {
+            console.log('socket.io connected successfully')
+            accept(null, true);
+          }
+
+
+  }));
+
 
 passport.serializeUser(function(user, done) {
     // console.log(user)
@@ -59,8 +84,12 @@ function isLoggedin (req, res, next){
 app.post('/login', passport.authenticate('local'), function(req, res){
   // console.log('login');
   // console.log(req.user);
-  console.log(req.session);
-  console.log(typeof passport.session);
+  io.on('connection', function(socket){
+    socket.emit('news', { hello : 'world'})
+  })
+  // console.log(req.sessionID);
+  // console.log(passport.session);
+  // console.log(app.sess);
   // console.log(req.user)
   res.json(req.user)
 })
@@ -91,6 +120,12 @@ app.post('/book', isLoggedin,function (req, res) {
   res.json({"message": "secure route"})
 })
 
-app.listen(8000, function(){
-  console.log('sever running')
+// var httpServer = http.createServer(app);
+// httpServer.listen(8000);
+
+// app.listen(8000, function(){
+//   console.log('sever running')
+// })
+http.listen(8000, function (){
+
 })
